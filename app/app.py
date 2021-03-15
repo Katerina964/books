@@ -19,10 +19,9 @@ from flask_admin import helpers as admin_helpers
 
 app = Flask(__name__)
 
-
+app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-app.config.from_object(Config)
 login_manager = LoginManager(app)
 admin = Admin(app, name='admin', template_mode='bootstrap3')
 
