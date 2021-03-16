@@ -7,13 +7,9 @@ from datetime import datetime
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_security import Security, SQLAlchemyUserDatastore
-from flask_login import LoginManager, UserMixin, login_required, current_user
-from flask import render_template
+from flask_login import LoginManager, UserMixin, current_user
 from flask_security import RoleMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask import url_for, redirect, request, abort
-import flask_login as login
-from flask_admin import helpers
+from flask import url_for, redirect
 from flask_admin import helpers as admin_helpers
 
 
@@ -40,11 +36,10 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String, unique=True)
     password = db.Column(db.String)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
-    updated_on = db.Column(db.DateTime(), default=datetime.utcnow,
-                                          onupdate=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     active = db.Column(db.Boolean())
-    roles = db.relationship('Role', secondary=roles_users,
-                           backref=db.backref('users', lazy='dynamic'))
+    roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
+
     def __str__(self):
         return self.email
 
@@ -54,6 +49,7 @@ class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True)
     description = db.Column(db.String(255))
+
     def __str__(self):
         return self.name
 
@@ -63,20 +59,19 @@ security = Security(app, user_datastore)
 
 
 class MyModelView(ModelView):
-  def is_accessible(self):
-    return (current_user.is_active and
-            current_user.is_authenticated
-            )
-  def _handle_view(self, name):
-    if not self.is_accessible():
-      return redirect(url_for('security.login'))
+    def is_accessible(self):
+        return (current_user.is_active and current_user.is_authenticated)
+
+    def _handle_view(self, name):
+        if not self.is_accessible():
+            return redirect(url_for('security.login'))
 
 
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     date_of_birth = db.Column(db.DateTime())
-    books = db.relationship('Book', backref='author',lazy='dynamic')
+    books = db.relationship('Book', backref='author', lazy='dynamic')
 
     def __repr__(self):
         return self.name
@@ -93,12 +88,12 @@ class Book(db.Model):
 
 
 class AuthorView(MyModelView):
-        column_filters = ['name']
-        form_excluded_columns = ['books']
+    column_filters = ['name']
+    form_excluded_columns = ['books']
 
 
 class BookView(MyModelView):
-        column_filters = ['title']
+    column_filters = ['title']
 
 
 admin.add_view(BookView(Book, db.session))
@@ -117,5 +112,5 @@ def security_context_processor():
     )
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
